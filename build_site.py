@@ -218,6 +218,8 @@ if prev:  # don't alert on the very first run (no baseline)
     if cash_near and not prev.get("cash_near"):
         alerts.append(f"Conditions tightening: NFCI at {pc(nfci_pct_now,0)} of its 5y range (cash at 80%). NFCI {nfci_now:+.2f} vs trigger {nfci_trigger_level:+.2f}.")
 json.dump({"signal":cur,"trend_near":bool(trend_near),"cash_near":bool(cash_near),
+           "ndx":round(ndx_now), "pct_above":round(pct_above,4), "sma_rising":bool(sma_rising),
+           "nfci":round(nfci_now,2), "nfci_pct":round(nfci_pct_now,3),
            "asof":str(asof.date()),"updated":dt.datetime.now(dt.timezone.utc).isoformat()},
           open(STATE,"w"), indent=2)
 gm_user=os.environ.get("GMAIL_USER"); gm_pw=os.environ.get("GMAIL_APP_PW")
