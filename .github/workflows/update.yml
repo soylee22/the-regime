@@ -1,0 +1,26 @@
+# Auto-update for The Regime tracker. Lives at .github/workflows/update.yml in
+# the Pages repo. Rebuilds index.html every weekday (prices + gate meters stay
+# current; the signal itself only changes weekly) and commits it back; GitHub
+# Pages (served from main / root) redeploys automatically.
+name: update-the-regime
+on:
+  schedule:
+    - cron: "23 13 * * 1-5"   # weekdays 13:23 UTC, after US data + Wed NFCI release
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install pandas numpy yfinance
+      - run: python build_site.py
+      - run: |
+          git config user.name "soylee22"
+          git config user.email "73914454+soylee22@users.noreply.github.com"
+          git add index.html
+          git commit -m "auto: refresh $(date -u +%F)" || echo "no change"
+          git push
