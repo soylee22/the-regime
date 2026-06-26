@@ -37,10 +37,12 @@ padding:13px 18px;margin:14px 0;font-size:15px}
 .gate h3{margin:0 0 3px;font-size:15px;font-family:'Lora',Georgia,serif;font-weight:700}
 .gate .desc{font-size:12.5px;color:var(--mut);margin-bottom:12px}
 .gate .big{font-size:16px;font-weight:600}
-.meter{height:12px;background:#ECEAE3;border:1px solid var(--rule);position:relative;margin-top:11px;overflow:visible}
-.meter .fill{height:100%}
-.meter .mark{position:absolute;top:-4px;width:2px;height:20px;background:var(--ink)}
-.meter-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-top:7px}
+.track{height:14px;background:#ECEAE3;border:1px solid var(--rule);position:relative;margin-top:16px;overflow:visible}
+.track .danger{position:absolute;top:0;height:100%;background:rgba(227,18,11,.20)}
+.track .dlbl{position:absolute;top:-15px;font-size:10px;letter-spacing:.04em;color:var(--red);font-weight:700}
+.track .now{position:absolute;top:-5px;height:24px;width:2px;background:var(--ink)}
+.track .now:after{content:"now";position:absolute;top:-14px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--ink)}
+.meter-row{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-top:8px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:0;border:1px solid var(--rule);background:var(--rule)}
 .card{background:var(--paper);padding:13px 15px}
 .card .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut)}
@@ -78,16 +80,16 @@ a{color:var(--blue)}
 <div class="kick"><span>Gate proximity</span><div class="ln"></div></div>
 <div class="gates">
   <div class="gate"><h3>Trend gate &rarr; Moderate</h3>
-    <div class="desc">Aggressive needs the Nasdaq-100 above a rising 200-day average. Below it &rarr; de-lever to Moderate.</div>
-    <div class="big">Nasdaq-100 @@NDXNOW@@ is @@PCTABOVE@@ vs the 200-day (@@SMANOW@@, @@SMARISE@@)</div>
-    <div class="meter"><div class="fill" style="width:@@TRENDBAR@@%;background:linear-gradient(90deg,#E3120B,#C77B0A,#1A8F5A)"></div><div class="mark" style="left:33%"></div></div>
-    <div class="meter-row"><span>&minus;10% (below)</span><span>200-day</span><span>+20% (clear)</span></div>
+    <div class="desc">Aggressive needs the Nasdaq-100 index (^NDX) above a rising 200-day average. If it falls below the line, the strategy de-levers to Moderate.</div>
+    <div class="big">@@TRENDLINE@@</div>
+    <div class="track"><div class="danger" style="left:0;width:33%"></div><div class="dlbl" style="left:4px">&larr; Moderate</div><div class="now" style="left:@@TRENDPOS@@%"></div></div>
+    <div class="meter-row"><span>below the 200-day</span><span>200-day</span><span>+20% above</span></div>
   </div>
   <div class="gate"><h3>Conditions gate &rarr; Cash</h3>
     <div class="desc">Cash triggers when financial conditions turn tight: the Chicago Fed NFCI in the top 20% of its 5-year range.</div>
-    <div class="big">NFCI @@NFCINOW@@ &middot; @@NFCIPCT@@ of 5-year range (cash if &gt; @@NFCITRIG@@)</div>
-    <div class="meter"><div class="fill" style="width:@@NFCIBAR@@%;background:linear-gradient(90deg,#006BA2,#3EBCD2,#C77B0A,#E3120B)"></div><div class="mark" style="left:80%"></div></div>
-    <div class="meter-row"><span>loose</span><span>80% = cash</span><span>tight</span></div>
+    <div class="big">@@NFCILINE@@</div>
+    <div class="track"><div class="danger" style="left:80%;width:20%"></div><div class="dlbl" style="right:4px">Cash &rarr;</div><div class="now" style="left:@@NFCIPOS@@%"></div></div>
+    <div class="meter-row"><span>loose (0%)</span><span>80% &rarr; Cash</span><span>tight (100%)</span></div>
   </div>
 </div>
 

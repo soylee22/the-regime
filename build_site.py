@@ -132,12 +132,12 @@ ACTION = {
   "CASH":       "Hold 100% money-market fund. Financial conditions tight.",
 }[cur]
 
-# next NFCI release = next Wednesday (Chicago Fed publishes Wed ~8:30 ET for prior week)
+# next NFCI release = next Wednesday (Chicago Fed publishes Wed ~8:30 ET for prior week).
+# weekly signal rolls at the start of each ISO week (Monday); the page holds that
+# weekly signal steady and only refreshes prices/gate-meters daily.
 today = dt.date.today()
-days_to_wed = (2 - today.weekday()) % 7; days_to_wed = days_to_wed or 7
-next_nfci = today + dt.timedelta(days=days_to_wed)
-days_to_fri = (4 - today.weekday()) % 7; days_to_fri = days_to_fri or 7
-next_eval = today + dt.timedelta(days=days_to_fri)
+next_nfci = today + dt.timedelta(days=(2 - today.weekday()) % 7)   # next Wed (incl. today)
+next_eval = today + dt.timedelta(days=(0 - today.weekday()) % 7)   # next Mon (incl. today)
 
 # ----------------------------------------------------------------- signal history (weekly)
 wsel = idx[wmask]
@@ -173,8 +173,26 @@ trend_drop = pct_above
 trend_bar = max(0,min(100, (pct_above+0.10)/0.30*100))   # -10%..+20% mapped to 0..100
 nfci_bar = max(0,min(100, nfci_pct_now*100))
 
+# marker positions + plain-English gate sentences
+trend_pos = max(2, min(98, (pct_above+0.10)/0.30*100))   # scale -10%..+20%
+nfci_pos  = max(2, min(98, nfci_pct_now*100))
+sma_word = "rising" if sma_rising else "falling"
+if pct_above >= 0:
+    trend_line = (f"The Nasdaq-100 ({ndx_now:,.0f}) is {signl(pct_above)} above its 200-day "
+                  f"({sma_now:,.0f}, {sma_word}). It would have to fall {pc(abs(pct_above))} to drop to Moderate.")
+else:
+    trend_line = (f"The Nasdaq-100 ({ndx_now:,.0f}) is {signl(pct_above)} vs its 200-day "
+                  f"({sma_now:,.0f}, {sma_word}) &mdash; below the line, so the trend gate says Moderate.")
+if nfci_pct_now < 0.80:
+    nfci_line = (f"NFCI is {nfci_now:+.2f}, at the {pc(nfci_pct_now,0)} mark of its 5-year range (loose). "
+                 f"Cash needs the top 20% (NFCI above {nfci_trigger_level:+.2f}) &mdash; well above here.")
+else:
+    nfci_line = (f"NFCI is {nfci_now:+.2f}, in the top 20% of its 5-year range &mdash; conditions tight, so the gate says Cash.")
+
 tmpl = open(os.path.join(HERE,"template.html")).read()
 repl = {
+ "@@TRENDPOS@@": f"{trend_pos:.0f}", "@@NFCIPOS@@": f"{nfci_pos:.0f}",
+ "@@TRENDLINE@@": trend_line, "@@NFCILINE@@": nfci_line,
  "@@ASOF@@": asof.strftime("%d %b %Y"),
  "@@CUR@@": cur, "@@BADGE@@": badge_color, "@@ACTION@@": ACTION,
  "@@CAGR@@": pc(M["CAGR"]), "@@MAXDD@@": pc(M["MaxDD"]), "@@MAR@@": f"{M['MAR']:.2f}",
