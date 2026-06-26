@@ -156,6 +156,16 @@ DATA = {
   "dates":[d.strftime("%Y-%m-%d") for d in chart_idx],
   "strat":series(strat), "strat3":series(strat3), "spy":series(spyN), "qqq":series(qqqN),
 }
+# recent Nasdaq-100 + 200d SMA (3y daily) and NFCI (3y weekly) for the small charts
+nxi = df.index[-756:]
+DATA["nx_dates"] = [d.strftime("%Y-%m-%d") for d in nxi]
+DATA["nx_ndx"]   = [round(float(x)) for x in df["ndx"].reindex(nxi).values]
+_smar = sma200.reindex(nxi).values
+DATA["nx_sma"]   = [None if pd.isna(x) else round(float(x)) for x in _smar]
+nfw = df["nfci"].reindex(wsel).dropna().iloc[-160:]
+DATA["nf_dates"] = [d.strftime("%Y-%m-%d") for d in nfw.index]
+DATA["nf_val"]   = [round(float(x),2) for x in nfw.values]
+DATA["nf_trig"]  = round(float(nfci_trigger_level),2)
 
 # ----------------------------------------------------------------- render
 def pc(x,d=1): return f"{x*100:.{d}f}%"
@@ -188,6 +198,44 @@ if nfci_pct_now < 0.80:
                  f"Cash needs the top 20% (NFCI above {nfci_trigger_level:+.2f}) &mdash; well above here.")
 else:
     nfci_line = (f"NFCI is {nfci_now:+.2f}, in the top 20% of its 5-year range &mdash; conditions tight, so the gate says Cash.")
+
+# ---- alerts: email on signal change, or when a gate newly gets close --------
+import smtplib, ssl
+from email.mime.text import MIMEText
+STATE = os.path.join(HERE, "state.json")
+prev = {}
+if os.path.exists(STATE):
+    try: prev = json.load(open(STATE))
+    except Exception: prev = {}
+trend_near = (0 <= pct_above < 0.04)        # within 4% above the 200-day
+cash_near  = (nfci_pct_now > 0.70)          # within 10 percentile pts of the 0.80 cash trigger
+alerts = []
+if prev:  # don't alert on the very first run (no baseline)
+    if prev.get("signal") != cur:
+        alerts.append(f"SIGNAL CHANGED: {prev.get('signal')} -> {cur}. {ACTION}")
+    if trend_near and not prev.get("trend_near"):
+        alerts.append(f"Trend gate approaching: Nasdaq-100 only {signl(pct_above)} above its 200-day. A fall below it -> Moderate.")
+    if cash_near and not prev.get("cash_near"):
+        alerts.append(f"Conditions tightening: NFCI at {pc(nfci_pct_now,0)} of its 5y range (cash at 80%). NFCI {nfci_now:+.2f} vs trigger {nfci_trigger_level:+.2f}.")
+json.dump({"signal":cur,"trend_near":bool(trend_near),"cash_near":bool(cash_near),
+           "asof":str(asof.date()),"updated":dt.datetime.now(dt.timezone.utc).isoformat()},
+          open(STATE,"w"), indent=2)
+gm_user=os.environ.get("GMAIL_USER"); gm_pw=os.environ.get("GMAIL_APP_PW")
+to=os.environ.get("ALERT_TO", gm_user or "")
+if alerts and gm_user and gm_pw:
+    chg = any("CHANGED" in a for a in alerts)
+    body=("The Regime — alert\n\n"+"\n\n".join(alerts)+
+          f"\n\nCurrent signal: {cur}\nLive: https://soylee22.github.io/the-regime/\nas of {asof.date()}")
+    m=MIMEText(body); m["Subject"]=f"[The Regime] {cur}"+(" — SIGNAL CHANGE" if chg else " — gate watch")
+    m["From"]=gm_user; m["To"]=to
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com",465,context=ssl.create_default_context()) as s:
+            s.login(gm_user, gm_pw); s.sendmail(gm_user,[to],m.as_string())
+        print(f"alert email sent ({len(alerts)})")
+    except Exception as e:
+        print("email failed:", e)
+elif alerts:
+    print("alerts (no email creds set):", alerts)
 
 tmpl = open(os.path.join(HERE,"template.html")).read()
 repl = {

@@ -93,6 +93,13 @@ a{color:var(--blue)}
   </div>
 </div>
 
+<div class="kick"><span>Nasdaq-100 vs its 200-day average &middot; the trend gate</span><div class="ln"></div></div>
+<div class="chartbox"><canvas id="ndxchart" height="118"></canvas></div>
+
+<div class="kick"><span>Financial conditions (NFCI) &middot; the cash gate, last 3 years</span><div class="ln"></div></div>
+<p class="lede">Below the red dashed line = loose (Aggressive ok). Cross above it (top 20% of the 5-year range) = Cash.</p>
+<div class="chartbox"><canvas id="nfcichart" height="74"></canvas></div>
+
 <div class="kick"><span>Performance since 2000 &middot; after 7bps per switch</span><div class="ln"></div></div>
 <p class="lede">One strategy, flipping between Aggressive / Moderate / Cash. The toggle only changes which ETF the <b>Aggressive</b> phase holds &mdash; LQQ (2&times;) or LQQ3 (3&times;). Same signal either way.</p>
 <div class="chartbox">
@@ -160,5 +167,26 @@ function setLev(l){chart.data.datasets[0].data=(l==='3x')?D.strat3:D.strat;
  chart.data.datasets[0].label='Regime strategy ('+l+')';chart.update();
  document.getElementById('l2').classList.toggle('on',l==='2x');
  document.getElementById('l3').classList.toggle('on',l==='3x');}
+
+// Nasdaq-100 vs 200-day
+new Chart(document.getElementById('ndxchart'),{type:'line',data:{labels:D.nx_dates,datasets:[
+ mk('Nasdaq-100 (^NDX)',D.nx_ndx,'#121212',[],1.7),
+ mk('200-day average',D.nx_sma,'#E3120B',[6,4],1.6),
+]},options:{responsive:true,interaction:{mode:'index',intersect:false},
+ plugins:{legend:{labels:{color:'#121212',usePointStyle:true,boxWidth:8,font:{size:12.5}}},
+  tooltip:{callbacks:{label:c=>c.dataset.label+': '+(c.parsed.y!=null?c.parsed.y.toLocaleString():'')}}},
+ scales:{x:{ticks:{color:'#6b6b6b',maxTicksLimit:10},grid:{display:false}},
+  y:{position:'right',ticks:{color:'#6b6b6b'},grid:{color:'#E7E4DC'}}}}});
+
+// NFCI sparkline with the cash trigger line
+const _trig=D.nf_dates.map(()=>D.nf_trig);
+new Chart(document.getElementById('nfcichart'),{type:'line',data:{labels:D.nf_dates,datasets:[
+ {label:'NFCI',data:D.nf_val,borderColor:'#006BA2',backgroundColor:'rgba(0,107,162,.10)',borderWidth:1.9,pointRadius:0,tension:.12,fill:true},
+ mk('Cash trigger (80th pct)',_trig,'#E3120B',[5,4],1.2),
+]},options:{responsive:true,interaction:{mode:'index',intersect:false},
+ plugins:{legend:{labels:{color:'#121212',usePointStyle:true,boxWidth:8,font:{size:12.5}}},
+  tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y}}},
+ scales:{x:{ticks:{color:'#6b6b6b',maxTicksLimit:8},grid:{display:false}},
+  y:{position:'right',ticks:{color:'#6b6b6b'},grid:{color:'#E7E4DC'}}}}});
 </script>
 </body></html>

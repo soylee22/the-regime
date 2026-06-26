@@ -18,9 +18,13 @@ jobs:
         with: {python-version: "3.12"}
       - run: pip install pandas numpy yfinance
       - run: python build_site.py
+        env:
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PW: ${{ secrets.GMAIL_APP_PW }}
+          ALERT_TO: ${{ secrets.ALERT_TO }}
       - run: |
           git config user.name "soylee22"
           git config user.email "73914454+soylee22@users.noreply.github.com"
-          git add index.html
+          git add index.html state.json
           git commit -m "auto: refresh $(date -u +%F)" || echo "no change"
           git push
