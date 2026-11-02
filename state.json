@@ -2,11 +2,11 @@
   "signal": "AGGRESSIVE",
   "trend_near": true,
   "cash_near": false,
-  "ndx": 28163,
-  "pct_above": 0.0085,
+  "ndx": 28385,
+  "pct_above": 0.0164,
   "sma_rising": true,
   "nfci": -0.49,
   "nfci_pct": 0.344,
   "asof": "2026-10-30",
-  "updated": "2026-10-30T18:40:36.489067+00:00"
+  "updated": "2026-11-02T14:23:36.095241+00:00"
 }
