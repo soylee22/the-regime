@@ -2,11 +2,11 @@
   "signal": "MODERATE",
   "trend_near": false,
   "cash_near": false,
-  "ndx": 27714,
-  "pct_above": -0.0104,
+  "ndx": 27741,
+  "pct_above": -0.0095,
   "sma_rising": true,
   "nfci": -0.46,
   "nfci_pct": 0.41,
   "asof": "2026-11-10",
-  "updated": "2026-11-10T20:29:39.102958+00:00"
+  "updated": "2026-11-10T21:20:35.647926+00:00"
 }

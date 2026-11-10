@@ -139,14 +139,18 @@ today = dt.date.today()
 next_nfci = today + dt.timedelta(days=(2 - today.weekday()) % 7)   # next Wed (incl. today)
 next_eval = today + dt.timedelta(days=(0 - today.weekday()) % 7)   # next Mon (incl. today)
 
-# ----------------------------------------------------------------- signal history (weekly)
+# ----------------------------------------------------------------- signal history
 wsel = idx[wmask]
-hist = pd.DataFrame({"date":idx,"state":pd.Series(he,index=idx).map({0:"AGG",1:"MOD",2:"CASH"}),
-                     "ndx":df["ndx"].values,"nfci":df["nfci"].values}).set_index("date")
-histw = hist.loc[wsel].copy()
-# keep only rows where state changed, plus the latest 12 weeks
-changes = histw[histw["state"]!=histw["state"].shift()]
-recent_changes = changes.tail(12)
+chg = np.empty(len(he), bool)
+chg[0] = True
+chg[1:] = (he[1:] != he[:-1])
+chg_df = pd.DataFrame({
+    "date": idx[chg],
+    "state": pd.Series(he[chg]).map({0: "AGG", 1: "MOD", 2: "CASH"}),
+    "ndx": df["ndx"].values[chg],
+    "nfci": df["nfci"].values[chg],
+}).set_index("date")
+recent_changes = chg_df.tail(12)
 
 # ----------------------------------------------------------------- chart data (weekly downsample)
 chart_idx = strat.index[strat.index.isin(wsel)]
@@ -165,6 +169,7 @@ DATA["nx_sma"]   = [None if pd.isna(x) else round(float(x)) for x in _smar]
 nfw = df["nfci"].reindex(wsel).dropna().iloc[-160:]
 DATA["nf_dates"] = [d.strftime("%Y-%m-%d") for d in nfw.index]
 DATA["nf_val"]   = [round(float(x),2) for x in nfw.values]
+DATA["nf_pct"]   = [round(float(x)*100) for x in nfci_pct.reindex(nfw.index).values]
 DATA["nf_trig"]  = round(float(nfci_trigger_level),2)
 
 # ----------------------------------------------------------------- render
@@ -177,6 +182,28 @@ for d,r in recent_changes[::-1].iterrows():
     col={"AGG":"#E3120B","MOD":"#C77B0A","CASH":"#006BA2"}[r["state"]]
     nm={"AGG":"Aggressive","MOD":"Moderate","CASH":"Cash"}[r["state"]]
     rows_html+=f"<tr><td>{d.strftime('%d %b %Y')}</td><td style='color:{col};font-weight:700'>{nm}</td><td>{r['ndx']:,.0f}</td><td>{r['nfci']:+.2f}</td></tr>"
+
+# NFCI weekly releases table (from raw FRED weekly series)
+nfci_weekly_pct = nfci.rolling(260, min_periods=52).rank(pct=True)
+nfci_diff = nfci.diff()
+recent_nfci = pd.DataFrame({
+    "nfci": nfci,
+    "pct": nfci_weekly_pct,
+    "diff": nfci_diff,
+}).dropna().tail(12)
+
+nfci_rows_html = ""
+for d, r in recent_nfci[::-1].iterrows():
+    val = r["nfci"]
+    pct = r["pct"] * 100
+    chg = r["diff"]
+    dist = nfci_trigger_level - val
+    chg_col = "#E3120B" if chg > 0 else "#1A8F5A"
+    chg_str = f"<span style='color:{chg_col}'>{chg:+.3f}</span>"
+    is_tight = val >= nfci_trigger_level
+    st_col = "#E3120B" if is_tight else "#1A8F5A"
+    status_str = f"<span style='color:{st_col};font-weight:600'>{'Tight (Cash)' if is_tight else 'Loose (Risk ok)'}</span>"
+    nfci_rows_html += f"<tr><td>{d.strftime('%d %b %Y')}</td><td><b>{val:+.2f}</b></td><td>{chg_str}</td><td>{pct:.0f}%</td><td>{dist:+.2f}</td><td>{status_str}</td></tr>"
 
 # trend cushion: how far NDX can fall before crossing SMA200
 trend_drop = pct_above
@@ -257,7 +284,7 @@ repl = {
  "@@NFCINOW@@": f"{nfci_now:+.2f}", "@@NFCIPCT@@": pc(nfci_pct_now,0),
  "@@NFCITRIG@@": f"{nfci_trigger_level:+.2f}", "@@NFCIBAR@@": f"{nfci_bar:.0f}",
  "@@NEXTNFCI@@": next_nfci.strftime("%a %d %b %Y"), "@@NEXTEVAL@@": next_eval.strftime("%a %d %b %Y"),
- "@@ROWS@@": rows_html, "@@DATA@@": json.dumps(DATA),
+ "@@ROWS@@": rows_html, "@@NFCITABLE@@": nfci_rows_html, "@@DATA@@": json.dumps(DATA),
  "@@BUILT@@": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
 }
 for k,v in repl.items(): tmpl=tmpl.replace(k,str(v))

@@ -96,9 +96,29 @@ a{color:var(--blue)}
 <div class="kick"><span>Nasdaq-100 vs its 200-day average &middot; the trend gate</span><div class="ln"></div></div>
 <div class="chartbox"><canvas id="ndxchart" height="118"></canvas></div>
 
-<div class="kick"><span>Financial conditions (NFCI) &middot; the cash gate, last 3 years</span><div class="ln"></div></div>
-<p class="lede">Below the red dashed line = loose (Aggressive ok). Cross above it (top 20% of the 5-year range) = Cash.</p>
-<div class="chartbox"><canvas id="nfcichart" height="74"></canvas></div>
+<div class="kick"><span>Financial conditions (NFCI) &middot; the cash gate</span><div class="ln"></div></div>
+<p class="lede">Chicago Fed National Financial Conditions Index (last 3 years). Below the red dashed line = loose (Aggressive ok). Cross above it (top 20% of the 5-year range) = Cash.</p>
+<div class="chartbox">
+  <canvas id="nfcichart" height="100"></canvas>
+  <div style="margin-top:16px;border-top:1px solid var(--rule);padding-top:12px">
+    <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);font-weight:700;margin-bottom:8px">Recent weekly releases &middot; Chicago Fed</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Release date</th>
+          <th>NFCI</th>
+          <th>Weekly change</th>
+          <th>5y Percentile</th>
+          <th>Distance to trigger</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+@@NFCITABLE@@
+      </tbody>
+    </table>
+  </div>
+</div>
 
 <div class="kick"><span>Performance since 2000 &middot; after 7bps per switch</span><div class="ln"></div></div>
 <p class="lede">One strategy, flipping between Aggressive / Moderate / Cash. The toggle only changes which ETF the <b>Aggressive</b> phase holds &mdash; LQQ (2&times;) or LQQ3 (3&times;). Same signal either way.</p>
@@ -185,7 +205,7 @@ new Chart(document.getElementById('nfcichart'),{type:'line',data:{labels:D.nf_da
  mk('Cash trigger (80th pct)',_trig,'#E3120B',[5,4],1.2),
 ]},options:{responsive:true,interaction:{mode:'index',intersect:false},
  plugins:{legend:{labels:{color:'#121212',usePointStyle:true,boxWidth:8,font:{size:12.5}}},
-  tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y}}},
+  tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(D.nf_pct&&D.nf_pct[c.dataIndex]!=null?' ('+D.nf_pct[c.dataIndex]+'% of 5y range)':'')}}}},
  scales:{x:{ticks:{color:'#6b6b6b',maxTicksLimit:8},grid:{display:false}},
   y:{position:'right',ticks:{color:'#6b6b6b'},grid:{color:'#E7E4DC'}}}}});
 </script>
