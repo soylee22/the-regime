@@ -205,7 +205,7 @@ new Chart(document.getElementById('nfcichart'),{type:'line',data:{labels:D.nf_da
  mk('Cash trigger (80th pct)',_trig,'#E3120B',[5,4],1.2),
 ]},options:{responsive:true,interaction:{mode:'index',intersect:false},
  plugins:{legend:{labels:{color:'#121212',usePointStyle:true,boxWidth:8,font:{size:12.5}}},
-  tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(D.nf_pct&&D.nf_pct[c.dataIndex]!=null?' ('+D.nf_pct[c.dataIndex]+'% of 5y range)':'')}}}},
+  tooltip:{callbacks:{label:c=>c.dataset.label+': '+c.parsed.y+(D.nf_pct&&D.nf_pct[c.dataIndex]!=null?' ('+D.nf_pct[c.dataIndex]+'% of 5y range)':'')}}},
  scales:{x:{ticks:{color:'#6b6b6b',maxTicksLimit:8},grid:{display:false}},
   y:{position:'right',ticks:{color:'#6b6b6b'},grid:{color:'#E7E4DC'}}}}});
 </script>
